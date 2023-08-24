@@ -1,0 +1,7 @@
+{
+    "text_key":"packed",
+    "tokenized": true,
+    "emb_loss_weight": 1.0,
+    "mlm_loss_weight": 0.0,
+    "max_seq_len": 512
+}
