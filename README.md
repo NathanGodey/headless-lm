@@ -6,7 +6,7 @@ Paper abstract:
 
 <br>
 
-![](./imgs/hlm_schema.png)
+![](./imgs/hlm_schema.svg)
 
 ## Install environment
 
@@ -16,7 +16,10 @@ pip install -r requirements.txt
 ```
 
 ## Preprocess data
-Adapt the config file in `configs` to your specific case, and then run `preprocess.py --config=configs/your_config_file.json`.
+Adapt the config file in `configs` to your specific case, and then run:
+```
+python preprocess.py --config=configs/your_config_file.json
+```
 
 ## Training
 ### Encoder
