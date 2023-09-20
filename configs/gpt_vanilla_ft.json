@@ -1,0 +1,11 @@
+{
+    "text_key":"packed",
+    "tokenized": true,
+    "emb_loss_weight": 0.0,
+    "lm_loss_weight": 1.0,
+    "loss_name": "cwt",
+    "total_nb_steps": 20000,
+    "schedule_type": "constant",
+    "learning_rate": 4e-5,
+    "contrastive_temperature": 1.0
+}
