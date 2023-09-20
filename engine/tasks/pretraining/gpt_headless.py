@@ -78,24 +78,26 @@ class GptHeadlessPretraining(Task):
     def loss(self, input, global_step, **kwargs):
         labels = input[..., 1:]
 
-        # get generator output and get mlm loss
+        # get generator output and get lm loss
         lm_result = self.lm_model(input, output_hidden_states=True)
-        last_hidden_state = lm_result.hidden_states[-1][:, :-1]
-        emb_prediction = self.emb_predictor(last_hidden_state)
 
-        if hasattr(self.lm_model, "transformer"):
-            embs = self.lm_model.transformer.get_input_embeddings()
-        elif hasattr(self.lm_model, "gpt_neox"):
-            embs = self.lm_model.gpt_neox.get_input_embeddings()
-        else:
-            raise AttributeError(f"Could not find transformer layer in model:\n {self.lm_model}")
-        
-        target_input_embeddings = embs(labels)
         total_loss = 0.
         emb_loss = 0.
         lm_loss = 0.
 
         if self.emb_loss_weight != 0.:
+            if hasattr(self.lm_model, "transformer"):
+                embs = self.lm_model.transformer.get_input_embeddings()
+            elif hasattr(self.lm_model, "gpt_neox"):
+                embs = self.lm_model.gpt_neox.get_input_embeddings()
+            else:
+                raise AttributeError(f"Could not find transformer layer in model:\n {self.lm_model}")
+            
+            target_input_embeddings = embs(labels)
+
+            last_hidden_state = lm_result.hidden_states[-1][:, :-1]
+            emb_prediction = self.emb_predictor(last_hidden_state)
+
             emb_loss = self.contrastive_loss_fn(
                 emb_prediction.flatten(0, 1),
                 target_input_embeddings.flatten(0, 1)
@@ -121,12 +123,15 @@ class GptHeadlessPretraining(Task):
             
             cosines = []
             for representations in lm_result.hidden_states:
-                representations = representations.flatten(0, 1)
-                rand = torch.rand(len(representations))
-                indicA = rand.topk(50).indices
-                indicB = (-rand).topk(50).indices
-                all_cosine = torch.nn.functional.cosine_similarity(representations[indicA], representations[indicB])
-                cosines.append(all_cosine.mean())
+                if self.trainer.state.stage == "validate":
+                    representations = representations.flatten(0, 1)
+                    rand = torch.rand(len(representations))
+                    indicA = rand.topk(50).indices
+                    indicB = (-rand).topk(50).indices
+                    all_cosine = torch.nn.functional.cosine_similarity(representations[indicA], representations[indicB])
+                    cosines.append(all_cosine.mean())
+                else:
+                    cosines.append(0.)
 
         return GptLossLogs(
             total_loss=total_loss,
