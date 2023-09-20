@@ -1,0 +1,7 @@
+{
+    "dataset_name": "the_pile_openwebtext2",
+    "dataset_config": "plain_text",
+    "hf_tokenizer": "EleutherAI/pythia-70m-deduped",
+    "output": "./dataset_storage/owt2_pythia.hf",
+    "max_seq_len": 2048
+}

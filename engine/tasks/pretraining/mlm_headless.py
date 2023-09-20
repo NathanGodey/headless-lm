@@ -21,7 +21,7 @@ class MlmLossLogs:
     optimization: dict
 
 
-class MlmMatchPretraining(Task):
+class MlmHeadlessPretraining(Task):
     def __init__(self, tokenizer, mlm_model, config=None):
         super().__init__()
         self.tokenizer = tokenizer

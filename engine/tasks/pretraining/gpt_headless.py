@@ -20,7 +20,7 @@ class GptLossLogs:
     optimization: dict
 
 
-class GptMatchPretraining(Task):
+class GptHeadlessPretraining(Task):
     def __init__(self, tokenizer, lm_model, config=None):
         super().__init__()
         self.tokenizer = tokenizer

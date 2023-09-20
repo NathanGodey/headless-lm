@@ -1,2 +1,2 @@
-from engine.tasks.pretraining.mlm_match import MlmMatchPretraining
-from engine.tasks.pretraining.gpt_match import GptMatchPretraining
+from engine.tasks.pretraining.mlm_headless import MlmHeadlessPretraining
+from engine.tasks.pretraining.gpt_headless import GptHeadlessPretraining
