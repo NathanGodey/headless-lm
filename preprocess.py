@@ -10,18 +10,14 @@ import torch
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset_name")
-parser.add_argument("--dataset_config")
-parser.add_argument("--hf_tokenizer")
-parser.add_argument("--max_seq_len")
-parser.add_argument("--output")
+parser.add_argument("--config")
 args = parser.parse_args()
 
-ds_name = args.dataset_name
-ds_config = args.dataset_config
-hf_tokenizer = args.hf_tokenizer
-max_seq_len = args.max_seq_len
-output = args.output
+ds_name = args.config["dataset_name"]
+ds_config = args.config["dataset_config"]
+hf_tokenizer = args.config["hf_tokenizer"]
+max_seq_len = args.config["max_seq_len"]
+output = args.config["output"]
 
 NUM_CPU = psutil.cpu_count()
 print(f"Using {NUM_CPU} CPUs...")

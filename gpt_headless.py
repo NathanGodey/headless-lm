@@ -19,8 +19,6 @@ parser.add_argument("--gpu_bs")
 parser.add_argument("--dataset")
 parser.add_argument("--hf_tokenizer")
 
-parser.add_argument("--model_max_seq_len")
-
 parser.add_argument("--run_name")
 parser.add_argument("--hf_path")
 parser.add_argument("--accelerator", default="hf")
@@ -40,7 +38,7 @@ gpu_bs = int(args.gpu_bs)
 dataset = args.dataset
 hf_tokenizer = args.hf_tokenizer
 
-model_max_seq_len = model_max_seq_len
+model_max_seq_len = args.config.pop("model_max_seq_len", 2048)
 
 run_name = args.run_name
 hf_path = args.hf_path

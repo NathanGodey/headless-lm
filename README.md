@@ -1,92 +1,106 @@
-# headless-lm
+# headless-lm: Better and Faster LM pretraining
+This repository contains training and evaluation code for the paper ["Headless Language Models: Learning without Predicting with Contrastive Weight Tying"](https://arxiv.org/abs/2309.08351).
 
+Paper abstract:
+> Self-supervised pre-training of language models usually consists in predicting probability distributions over extensive token vocabularies. In this study, we propose an innovative method that shifts away from probability prediction and instead focuses on reconstructing input embeddings in a contrastive fashion via Constrastive Weight Tying (CWT). We apply this approach to pretrain Headless Language Models in both monolingual and multilingual contexts. Our method offers practical advantages, substantially reducing training computational requirements by up to 20 times, while simultaneously enhancing downstream performance and data efficiency. We observe a significant +1.6 GLUE score increase and a notable +2.7 LAMBADA accuracy improvement compared to classical LMs within similar compute budgets.
 
+<br>
 
-## Getting started
+![](./imgs/hlm_schema.png)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Install environment
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.inria.fr/ngodey/headless-lm.git
-git branch -M main
-git push -uf origin main
+Make sure you have Python>=3.9 and Cuda>=11.2 installed. Then run:
+```bash
+pip install -r requirements.txt
 ```
 
-## Integrate with your tools
+## Preprocess data
+Adapt the config file in `configs` to your specific case, and then run `preprocess.py --config=configs/your_config_file.json`.
 
-- [ ] [Set up project integrations](https://gitlab.inria.fr/ngodey/headless-lm/-/settings/integrations)
+## Training
+### Encoder
+To train an encoder model:
+1. Write/edit model-related parameters in a config file similar to `configs/mlm_headless.json`
+2. Run the following command with your specific arguments:
+```bash
+python mlm_headless.py \
+    --config configs/your_config_file.json \
+    --num_nodes your-gpu-node-count \
+    --global_bs your-accumulated-batch_size \
+    --gpu_bs your-per-device-batch-size \
+    --dataset your-preprocessed-output.hf \
+    --hf_tokenizer your-tokenizer \
+    --hf_path path-to-your-model-arch-on-HF \
+    --model_max_seq_len models-max-pos-embeddings \
+    --run_name run-name-for-logging-and-ckpts \
+    --saved_ckpt_path where-to-save-ckpts
+```
+Other args include `--accelerator` (`hf`, `xformers` or `flash_attention`), `--ckpt_every` to pick checkpoint frequency, among others.
 
-## Collaborate with your team
+3. Pick your checkpoint and publish it to HuggingFace:
+```python
+python hf_publisher.py \
+    --hf_name your_hf_id/your_model \
+    --model_ckpt your_model.ckpt \
+    --mode mlm
+```
+### Decoder
+To train a decoder model:
+1. Write/edit model-related parameters in a config file similar to `configs/gpt_headless_70m.json`
+2. Run the following command with your specific arguments:
+```bash
+python gpt_headless.py \
+    --config configs/your_config_file.json \
+    --num_nodes your-gpu-node-count \
+    --global_bs your-accumulated-batch_size \
+    --gpu_bs your-per-device-batch-size \
+    --dataset your-preprocessed-output.hf \
+    --hf_tokenizer your-tokenizer \
+    --hf_path path-to-your-model-arch-on-HF \
+    --model_max_seq_len models-max-pos-embeddings \
+    --run_name run-name-for-logging-and-ckpts \
+    --saved_ckpt_path where-to-save-ckpts
+```
+Other args include `--accelerator` (`hf`, `xformers` or `flash_attention`), `--ckpt_every` to pick checkpoint frequency, among others.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+3. (optional) Pick your checkpoint and publish it to HuggingFace. You'll need to use the `add_head` option to make it able to output tokens:
+```python
+python hf_publisher.py \
+    --hf_name your_hf_id/your_model \
+    --model_ckpt your_model.ckpt \
+    --mode add_head
+```
 
-## Test and Deploy
+4. The resulting model will probably perform poorly for language generation. Why? Because it was not trained to do it! To turn your contrastive model into a good LM, you'll need add a head and fine-tune it. Setup a config file in the style of `config/gpt_vanilla_ft.json` and run:
+```
+python ft_gpt_headless.py \
+    --config configs/your_ft_config.json \
+    ...
+    (same args as above, but you may want different values)
+```
 
-Use the built-in continuous integration in GitLab.
+5. Pick your fine-tuned checkpoint and publish it to HuggingFace. You don't need to use the `add_head` option anymore as you just trained one:
+```python
+python hf_publisher.py \
+    --hf_name your_hf_id/your_model \
+    --model_ckpt your_model.ckpt \
+    --mode lm
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## Evaluation
+You can now use any zero-shot or fine-tuning code to evaluate your models. We provide our GLUE fine-tuning script in `glue_finetuning.py`, and we used the [LM Eval Harness](https://github.com/EleutherAI/lm-evaluation-harness) for zero-shot evaluation.
 
-***
+## Citation
+This repo contains the code that was used for the experiments of the paper ["Headless Language Models: Learning without Predicting with Contrastive Weight Tying"](https://arxiv.org/abs/2309.08351).
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```bibtex
+@misc{godey2023headless,
+      title={Headless Language Models: Learning without Predicting with Contrastive Weight Tying}, 
+      author={Nathan Godey and Éric de la Clergerie and Benoît Sagot},
+      year={2023},
+      eprint={2309.08351},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+```

@@ -39,7 +39,7 @@ gpu_bs = int(args.gpu_bs)
 dataset = args.dataset
 hf_tokenizer = args.hf_tokenizer
 
-model_max_seq_len = model_max_seq_len
+model_max_seq_len = args.config.pop("model_max_seq_len", 128)
 
 run_name = args.run_name
 hf_path = args.hf_path
