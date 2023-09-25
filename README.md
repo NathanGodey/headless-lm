@@ -78,9 +78,14 @@ python hf_publisher.py \
 4. The resulting model will probably perform poorly for language generation. Why? Because it was not trained to do it! To turn your contrastive model into a good LM, you'll need add a head and fine-tune it. Setup a config file in the style of `config/gpt_vanilla_ft.json` and run:
 ```
 python ft_gpt_headless.py \
+    --ckpt_path your_headless_model.ckpt' \
     --config configs/your_ft_config.json \
-    ...
-    (same args as above, but you may want different values)
+    --num_nodes your-gpu-nodes \
+    --global_bs your-accumulated-bs \
+    --gpu_bs your-device-bs \
+    --dataset your-preprocessed-output.hf \
+    --run_name run-name-for-logging-and-ckpts \
+    --saved_ckpt_path where-to-save-finetuned-ckpts
 ```
 
 5. Pick your fine-tuned checkpoint and publish it to HuggingFace. You don't need to use the `add_head` option anymore as you just trained one:
