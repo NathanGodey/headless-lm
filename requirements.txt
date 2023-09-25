@@ -1,6 +1,5 @@
 accelerate==0.21.0
 datasets==2.14.4
-flash-attn==2.0.9
 huggingface-hub==0.16.4
 llvmlite==0.38.0
 numpy==1.25.2
@@ -13,6 +12,5 @@ torchmetrics==0.11.3
 torchvision==0.15.2
 torchviz==0.0.2
 transformers==4.32.0
-triton==2.0.0
 wandb==0.13.10
 xformers==0.0.21
