@@ -8,6 +8,7 @@ import psutil
 import argparse
 import torch
 import time
+import json
 
 print("CPU count: ", psutil.cpu_count())
 
@@ -25,6 +26,7 @@ parser.add_argument("--accelerator", default="hf")
 parser.add_argument("--precision", default="16-mixed")
 parser.add_argument('--ckpt_path', nargs='?', const=None, type=str)
 
+parser.add_argument('--model_max_seq_len', default=2048)
 parser.add_argument('--saved_ckpt_path')
 parser.add_argument("--ckpt_every", default=10000)
 
@@ -38,7 +40,7 @@ gpu_bs = int(args.gpu_bs)
 dataset = args.dataset
 hf_tokenizer = args.hf_tokenizer
 
-model_max_seq_len = args.config.pop("model_max_seq_len", 2048)
+model_max_seq_len = int(args.model_max_seq_len)
 
 run_name = args.run_name
 hf_path = args.hf_path

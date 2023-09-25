@@ -16,11 +16,10 @@ parser.add_argument("--num_nodes")
 parser.add_argument("--global_bs")
 parser.add_argument("--gpu_bs")
 parser.add_argument("--dataset")
-parser.add_argument("--hf_tokenizer")
+parser.add_argument("--mode", default='ft')
+
 
 parser.add_argument("--run_name")
-parser.add_argument("--hf_path")
-parser.add_argument("--accelerator", default="hf")
 parser.add_argument("--precision", default="16-mixed")
 parser.add_argument('--ckpt_path', nargs='?', const=None, type=str)
 
@@ -35,13 +34,10 @@ ckpt_path = args.ckpt_path
 global_bs = int(args.global_bs)
 gpu_bs = int(args.gpu_bs)
 dataset = args.dataset
-hf_tokenizer = args.hf_tokenizer
-
-model_max_seq_len = model_max_seq_len
 
 run_name = args.run_name
-hf_path = args.hf_path
-accelerator = args.accelerator
+mode = args.mode
+
 precision = args.precision
 ckpt_every = args.ckpt_every
 
@@ -58,7 +54,7 @@ print(f"Grad. accumulating factor: {accu_grad_batches}")
 datamodule = DataModule.from_datasets(dataset, train_batch_size=gpu_bs, infer_batch_size=gpu_bs,
 split_names=["train(:0.9999)", "train(0.9999:)"], from_disk=True, num_workers=0)
 
-task_trainer = TaskTrainer.load_from_checkpoint(ft_model, map_location="cuda")
+task_trainer = TaskTrainer.load_from_checkpoint(ckpt_path, map_location="cuda")
 
 tokenizer = task_trainer.task.tokenizer
 lm_model = task_trainer.task.lm_model
@@ -78,7 +74,7 @@ task = GptHeadlessPretraining(
 )
 
 version_name = run_name
-trainer = TaskTrainer(task, logger_args={"version": version_name'})
+trainer = TaskTrainer(task, logger_args={"version": version_name})
 
 checkpoints = [
   ModelCheckpoint(every_n_train_steps=ckpt_every, dirpath=f'{saved_ckpt_path}/{version_name}', save_top_k=-1),
@@ -96,6 +92,4 @@ trainer.fit(
   gradient_clip_val=1.0,
   benchmark=True,
   default_root_dir=f'{saved_ckpt_path}/{version_name}',
-  ckpt_path=ckpt_path
 )
-

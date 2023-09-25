@@ -7,17 +7,19 @@ import functools
 import operator
 import argparse
 import torch
+import json
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config")
 args = parser.parse_args()
 
-ds_name = args.config["dataset_name"]
-ds_config = args.config["dataset_config"]
-hf_tokenizer = args.config["hf_tokenizer"]
-max_seq_len = args.config["max_seq_len"]
-output = args.config["output"]
+config = json.load(open(args.config, 'rb'))
+ds_name = config["dataset_name"]
+ds_config = config["dataset_config"]
+hf_tokenizer = config["hf_tokenizer"]
+max_seq_len = config["max_seq_len"]
+output = config["output"]
 
 NUM_CPU = psutil.cpu_count()
 print(f"Using {NUM_CPU} CPUs...")

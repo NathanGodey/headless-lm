@@ -3,6 +3,5 @@
     "tokenized": true,
     "emb_loss_weight": 0.0,
     "mlm_loss_weight": 1.0,
-    "max_seq_len": 128,
-    "model_max_seq_len": 128
+    "max_seq_len": 128
 }

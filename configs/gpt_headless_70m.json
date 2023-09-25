@@ -5,7 +5,6 @@
     "lm_loss_weight": 0.0,
     "loss_name": "cwt",
     "total_nb_steps": 143000,
-    "model_max_seq_len": 2048,
     "learning_rate": 1e-3,
     "contrastive_temperature": 1.0
 }
