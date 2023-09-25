@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ```
 
 ## Preprocess data
-Adapt the config file in `configs` to your specific case, and then run:
+Adapt the config file in `configs/preprocess_owt2.json` to your specific case, and then run:
 ```
 python preprocess.py --config=configs/your_config_file.json
 ```
