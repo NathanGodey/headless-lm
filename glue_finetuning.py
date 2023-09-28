@@ -1,7 +1,7 @@
 from engine.tasks.benchmark.glue import GlueBenchmark
 from transformers import AutoTokenizer, AutoModel
 
-model_id = 'nthngdy/headless-bert-bs64-owt2'
+model_id = 'your_model_on_hf'
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 mlm_model = AutoModel.from_pretrained(model_id)
